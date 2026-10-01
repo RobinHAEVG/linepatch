@@ -281,8 +281,11 @@ func ApplyFile(ctx context.Context, path string, set PatchSet) error {
 	if currentInfo.Mode()&os.ModeSymlink != 0 || !os.SameFile(initialInfo, currentInfo) {
 		return ErrConcurrentModification
 	}
+	if err = os.Remove(path); err != nil {
+		return fmt.Errorf("linepatch: remove original file %q: %w", path, err)
+	}
 	if err := os.Rename(tmpName, path); err != nil {
-		return fmt.Errorf("linepatch: replace %q: %w", path, err)
+		return fmt.Errorf("linepatch: move file %q: %w", path, err)
 	}
 	committed = true
 	return nil
@@ -413,9 +416,9 @@ func readRecord(r *bufio.Reader) ([]byte, bool, error) {
 }
 
 type outputTracker struct {
-	w         io.Writer
-	wrote     bool
-	endsInLF  bool
+	w        io.Writer
+	wrote    bool
+	endsInLF bool
 }
 
 func (o *outputTracker) Write(p []byte) (int, error) {
@@ -463,4 +466,3 @@ func preserveFinalNewline(f *os.File, want bool, newline []byte) error {
 	}
 	return f.Truncate(size - trim)
 }
-

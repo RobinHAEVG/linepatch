@@ -281,9 +281,7 @@ func ApplyFile(ctx context.Context, path string, set PatchSet) error {
 	if currentInfo.Mode()&os.ModeSymlink != 0 || !os.SameFile(initialInfo, currentInfo) {
 		return ErrConcurrentModification
 	}
-	if err = os.Remove(path); err != nil {
-		return fmt.Errorf("linepatch: remove original file %q: %w", path, err)
-	}
+	_ = f.Close()
 	if err := os.Rename(tmpName, path); err != nil {
 		return fmt.Errorf("linepatch: move file %q: %w", path, err)
 	}
